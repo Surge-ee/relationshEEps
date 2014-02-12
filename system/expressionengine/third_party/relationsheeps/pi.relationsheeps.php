@@ -51,7 +51,7 @@ class Relationsheeps {
 	*	@param $field the channel field we want to relate to
 	*	@param $value the value of the field we are looking for
 	*	@param $channel the channel we are searching for entires in
-	*	@return entries found from the database that meatch the search params
+	*	@return entries found from the database that match the search params
 	*/
 
 	private function doQuery($field, $value, $channel)
@@ -68,9 +68,31 @@ class Relationsheeps {
 	public function herd()
 	{
 		// Fetch the tag parameters we need to search for the entires
-		$channel = ee()->TMPL->fetch_param('flock');
-		$field = ee()->TMPL->fetch_param('field');
-		$value = ee()->TMPL->fetch_param('value');
+
+		/* 
+		*	The channel we are searching in
+		*/
+		$channel = trim(ee()->TMPL->fetch_param('flock'));
+
+		/*
+		*	The field we are searching with
+		*/
+		$field = trim(ee()->TMPL->fetch_param('field'));
+
+		/*
+		*	The value of the field to search for
+		*/
+		$value = trim(ee()->TMPL->fetch_param('value'));
+
+		/*
+		* Verify we have all the required parameters
+		*/
+		if($channel == '' || $field == '' || $value == '')
+		{
+			return false;
+		}
+
+
 	}
 	
 	// ----------------------------------------------------------------
