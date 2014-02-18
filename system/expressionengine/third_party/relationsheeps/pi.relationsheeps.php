@@ -79,6 +79,7 @@ class Relationsheeps {
 			return false;
 		}
 
+
 		// Do the same thing for the parent
 		$parent_channel_id = $this->EE->db->select('channel_id')
 			->from('channels')
@@ -91,24 +92,40 @@ class Relationsheeps {
 			return false;
 		}
 
-		// Find the field_id from related field to search in
-		$field_id = $this->EE->db->select('field_id')
-			->from('channel_fields')
-			->where('field_name', $field)
-			->get()->row('field_id');
 
-		if(!$field_id)
+		// check if were are looking up via url_title
+		if($field == 'url_title')
 		{
-			$this->EE->TMPL->log_item("Could not find field: " . $field);
-			return false;
+			$matching_child_ids = $this->EE->db->select('entry_id')
+				->from('channel_titles')
+				->where("url_title", $value)
+				->get()->result_array();
+
+		} else {
+
+			// we are not looking for url_title
+			// Find the field_id from related field to search in
+			$field_id = $this->EE->db->select('field_id')
+				->from('channel_fields')
+				->where('field_name', $field)
+				->get()->row('field_id');
+
+
+			if(!$field_id)
+			{
+				$this->EE->TMPL->log_item("Could not find field: " . $field);
+				return false;
+			}
+
+			// Now search the field for the value we're looking for
+			$matching_child_ids = $this->EE->db->select('entry_id')
+				->from('channel_data')
+				->where('channel_id', $child_channel_id)
+				->where("field_id_$field_id", $value)
+				->get()->result_array();
+
 		}
 
-		// Now search the field for the value we're looking for
-		$matching_child_ids = $this->EE->db->select('entry_id')
-			->from('channel_data')
-			->where('channel_id', $child_channel_id)
-			->where("field_id_$field_id", $value)
-			->get()->result_array();
 
 		if(empty($matching_child_ids))
 		{
