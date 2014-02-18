@@ -73,17 +73,35 @@ class Relationsheeps {
 			->where('channel_name', $channel_child)
 			->get()->row('channel_id');
 
+		if(!$child_channel_id)
+		{
+			$this->EE->TMPL->log_item("Could not find channel: " . $channel_child);
+			return false;
+		}
+
 		// Do the same thing for the parent
 		$parent_channel_id = $this->EE->db->select('channel_id')
 			->from('channels')
 			->where('channel_name', $channel_parent)
 			->get()->row('channel_id');
 
+		if(!$parent_channel_id)
+		{
+			$this->EE->TMPL->log_item("Could not find channel: " . $channel_parent);
+			return false;
+		}
+
 		// Find the field_id from related field to search in
 		$field_id = $this->EE->db->select('field_id')
 			->from('channel_fields')
 			->where('field_name', $field)
 			->get()->row('field_id');
+
+		if(!$field_id)
+		{
+			$this->EE->TMPL->log_item("Could not find field: " . $field);
+			return false;
+		}
 
 		// Now search the field for the value we're looking for
 		$matching_child_ids = $this->EE->db->select('entry_id')
@@ -92,6 +110,11 @@ class Relationsheeps {
 			->where("field_id_$field_id", $value)
 			->get()->result_array();
 
+		if(empty($matching_child_ids))
+		{
+			return false;
+		}
+
 		// Finally we can find the parent ids of related entires that match our terms
 		$entry_ids = $this->EE->db->select('entry_id')
 			->from('relationships')
@@ -99,6 +122,11 @@ class Relationsheeps {
 			->where_in('child_id', $matching_child_ids[0])
 			->where('channel_data.channel_id', $parent_channel_id)
 			->get()->result_array();
+
+		if(empty($entry_ids))
+		{
+			return false;
+		}
 
 		$entry_ids = array_map(array($this, 'filter_id_array'), $entry_ids);
 
@@ -130,6 +158,11 @@ class Relationsheeps {
 
 		// search for ids of the related sheep! (entries)
 		$ids = $this->findParentIds($channel_parent, $channel_child, $field, $value);
+
+		if(!$ids)
+		{
+			return false;
+		}
 
 		// grab the data for these entries
 		$this->EE->TMPL->tagparams['entry_id'] = implode('|', $ids);
@@ -182,7 +215,6 @@ class Relationsheeps {
 		* Let's herd the sheep together...
 		* (Execute a search)
 		*/
-		$this->EE->TMPL->log_item("$channel + $child + $value + $field");
 
 		$results = $this->run_search($channel, $child, $field, $value);
 
